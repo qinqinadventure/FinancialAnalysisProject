@@ -43,7 +43,7 @@ class PCASimilarity:
         # 如果没有提供特征名称，创建默认名称
         if self.feature_names is None:
             n_features = data_columns.shape[1]
-            self.feature_names = [f'特征{i}' for i in range(n_features)]
+            self.feature_names = [f'{i}' for i in range(n_features)]
 
         # 添加目标名称到特征名称列表
         self.all_feature_names = self.feature_names + [self.target_name]
@@ -68,39 +68,70 @@ class PCASimilarity:
         """根据索引获取特征名称"""
         if feature_idx < len(self.all_feature_names):
             return self.all_feature_names[feature_idx]
-        return f"特征{feature_idx}"
+        return f"{feature_idx}"
 
     def explained_variance_similarity(self, feature_idx, target_idx=-1):
         """
-        基于方差解释比重的加权相似度（修复版本）
+        基于方差解释比重的加权相似度（修复索引越界问题）
         """
         try:
-            # 获取主成分上的投影
-            feature_proj = self.transformed_data[:, feature_idx] if self.n_components > 1 else self.transformed_data
-            target_proj = self.transformed_data[:, target_idx] if self.n_components > 1 else self.transformed_data
+            if self.transformed_data is None or self.explained_variance_ratio_ is None:
+                return 0
 
-            # 确保数组维度正确
+            # 安全地获取投影数据
+            if self.n_components == 1:
+                # 一维情况：所有特征共享同一个投影
+                feature_proj = self.transformed_data.flatten()
+                target_proj = self.transformed_data.flatten()
+            else:
+                # 多维情况：为每个特征选择对应的主成分
+                # 使用模运算确保索引在有效范围内
+                feature_component_idx = feature_idx % self.n_components
+                target_component_idx = target_idx % self.n_components if target_idx >= 0 else -1
+
+                # 安全地获取投影
+                feature_proj = self.transformed_data[:, feature_component_idx]
+                target_proj = self.transformed_data[:, target_component_idx]
+
+            # 确保是一维数组
+            feature_vals = np.array(feature_proj).flatten()
+            target_vals = np.array(target_proj).flatten()
+
+            # 检查数据有效性
+            if len(feature_vals) != len(target_vals) or len(feature_vals) < 2:
+                return 0
+
             if self.n_components == 1:
                 # 一维情况：直接计算相关系数
-                feature_vals = feature_proj.flatten()
-                target_vals = target_proj.flatten()
-                corr, _ = pearsonr(feature_vals, target_vals)
-                weighted_similarity = abs(corr) * self.explained_variance_ratio_[0]
-                return weighted_similarity
+                corr, p_value = pearsonr(feature_vals, target_vals)
+                return abs(corr) * self.explained_variance_ratio_[0]
             else:
-                # 多维情况：各维度加权计算
+                # 多维情况：遍历所有主成分维度
                 weighted_similarity = 0
                 total_variance = 0
 
                 for i in range(self.n_components):
-                    # 正确处理二维索引
-                    feature_vals = feature_proj[:, i] if feature_proj.ndim > 1 else feature_proj
-                    target_vals = target_proj[:, i] if target_proj.ndim > 1 else target_proj
+                    try:
+                        # 获取当前维度的特征和目标投影
+                        if i < self.transformed_data.shape[1]:
+                            feat_dim = self.transformed_data[:, i]
+                            tgt_dim = self.transformed_data[:, i]
+                        else:
+                            continue
 
-                    corr, _ = pearsonr(feature_vals, target_vals)
-                    weight = self.explained_variance_ratio_[i]
-                    weighted_similarity += abs(corr) * weight
-                    total_variance += weight
+                        # 确保是一维数组
+                        feat_dim = np.array(feat_dim).flatten()
+                        tgt_dim = np.array(tgt_dim).flatten()
+
+                        if len(feat_dim) == len(tgt_dim) and len(feat_dim) > 1:
+                            corr, p_value = pearsonr(feat_dim, tgt_dim)
+                            weight = self.explained_variance_ratio_[i]
+                            weighted_similarity += abs(corr) * weight
+                            total_variance += weight
+
+                    except Exception as dim_error:
+                        print(f"维度 {i} 计算失败: {dim_error}")
+                        continue
 
                 return weighted_similarity / total_variance if total_variance > 0 else 0
 
