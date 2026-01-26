@@ -1,0 +1,10 @@
+{
+  "days":{
+    "values": 500,
+    "description": "往前推多少天"
+  },
+  "stock_code": {
+    "values": "000001",
+    "description": "待分析股票代码"
+  }
+}
