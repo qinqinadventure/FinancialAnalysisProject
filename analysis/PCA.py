@@ -11,26 +11,42 @@ class PCASimilarity:
     基于PCA的多数据列与目标数据列相似度分析类
     """
 
-    def __init__(self, n_components=2, standardize=True):
+    def __init__(self, n_components=2, standardize=True, feature_names=None):
         self.n_components = n_components
         self.standardize = standardize
         self.pca = PCA(n_components=n_components)
         self.scaler = StandardScaler() if standardize else None
         self.explained_variance_ratio_ = None
         self.components_ = None
+        self.feature_names = feature_names  # 新增特征名称参数
 
-    def fit(self, data_columns, target_column):
+    def fit(self, data_columns, target_column, target_name="target"):
         """
         拟合PCA模型到数据
         """
         if isinstance(data_columns, pd.DataFrame):
+            # 如果输入是DataFrame，自动获取特征名称
+            if self.feature_names is None:
+                self.feature_names = data_columns.columns.tolist()
             data_columns = data_columns.values
+
         if isinstance(target_column, pd.Series):
             target_column = target_column.values
+
+        # 存储目标名称
+        self.target_name = target_name
 
         # 将目标列作为额外特征合并
         target_reshaped = target_column.reshape(-1, 1)
         self.combined_data = np.hstack([data_columns, target_reshaped])
+
+        # 如果没有提供特征名称，创建默认名称
+        if self.feature_names is None:
+            n_features = data_columns.shape[1]
+            self.feature_names = [f'特征{i}' for i in range(n_features)]
+
+        # 添加目标名称到特征名称列表
+        self.all_feature_names = self.feature_names + [self.target_name]
 
         # 数据标准化
         if self.standardize:
@@ -47,6 +63,12 @@ class PCASimilarity:
         self.transformed_data = self.pca.transform(self.combined_data_scaled)
 
         return self
+
+    def get_feature_name(self, feature_idx):
+        """根据索引获取特征名称"""
+        if feature_idx < len(self.all_feature_names):
+            return self.all_feature_names[feature_idx]
+        return f"特征{feature_idx}"
 
     def explained_variance_similarity(self, feature_idx, target_idx=-1):
         """
@@ -171,7 +193,7 @@ class PCASimilarity:
 
     def rank_features(self, target_idx=-1, method='comprehensive'):
         """
-        对所有特征列进行相似度排序
+        对所有特征列进行相似度排序（使用特征名称）
         """
         try:
             n_features = self.combined_data.shape[1] - 1  # 排除目标列
@@ -189,7 +211,9 @@ class PCASimilarity:
                 else:
                     score = self.distance_similarity(i, target_idx)
 
-                rankings.append((i, score))
+                # 使用特征名称而不是数字索引
+                feature_name = self.get_feature_name(i)
+                rankings.append((feature_name, score))
 
             # 按相似度降序排序
             rankings.sort(key=lambda x: x[1], reverse=True)

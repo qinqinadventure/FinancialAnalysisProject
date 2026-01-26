@@ -21,8 +21,12 @@ if __name__ == "__main__":
     # 生成数据
     features, target = generate_sample_data()
 
+    # 示例：使用特征名称
+    feature_names = ['开盘价', '最高价', '最低价', '收盘价', '成交量', '成交额',
+                     '换手率', '市盈率', '市净率', '流通市值']
+
     # 创建相似度分析器
-    similarity_analyzer = PCA.PCASimilarity(n_components=3, standardize=True)
+    similarity_analyzer = PCA.PCASimilarity(n_components=3, feature_names=feature_names)
 
     # 拟合模型
     # 一千个，十个维度
