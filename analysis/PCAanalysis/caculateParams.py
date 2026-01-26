@@ -1,6 +1,41 @@
 import numpy as np
 import re
 
+# 根据列名提取增强版
+def get_column_by_name(df, column_name):
+    """
+    根据列名提取单列数据，支持计算表达式
+
+    参数:
+    df: pandas DataFrame
+    column_name: 列名字符串或计算表达式
+
+    返回:
+    pandas Series: 指定列的数据
+    """
+    # 如果是计算表达式，先添加列再提取
+    if is_calculation_expression(column_name):
+        df_with_new_col = add_calculated_column(df, column_name)
+        if df_with_new_col is not None and column_name in df_with_new_col.columns:
+            return df_with_new_col[column_name]
+        else:
+            return None
+
+    # 普通列名直接提取
+    if column_name in df.columns:
+        return df[column_name]
+    else:
+        print(f"列名 '{column_name}' 不存在。可用的列有: {list(df.columns)}")
+        return None
+
+# 判断是不是四则运算表达式
+def is_calculation_expression(column_name):
+    """
+    判断是否为计算表达式（包含四则运算符）
+    """
+    operators = ['+', '-', '*', '/']
+    return any(op in column_name for op in operators)
+
 # 支持根据传入的字符进行四则运算
 def add_calculated_column(df, expression, new_column_name=None):
     """

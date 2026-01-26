@@ -4,11 +4,11 @@
     "description": "往前推多少天"
   },
   "stock_code": {
-    "value": "000001",
+    "value": "399997",
     "description": "待分析股票代码"
   },
   "features": {
-    "value": ["涨幅","成交量"],
+    "value": ["涨跌幅","成交量","涨跌幅/成交量","涨跌幅/换手率"],
     "description": "待分析参数"
   }
 }
