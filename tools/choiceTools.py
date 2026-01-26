@@ -4,8 +4,9 @@ import tools.dataTools as DT
 
 def choice_analysis(choice):
     if choice == '1':
-        # 加载PCA分析参数
-        cfg = json.loads("D:\project\pycharm\FinancialAnalysisProject\cfg\PCA_config.json")
+        # 使用原始字符串避免转义问题
+        with open(r"D:\project\pycharm\FinancialAnalysisProject\cfg\PCA_config.json", 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
         # 获取关键参数
         features = cfg["features"]["value"]
         # 获取数据

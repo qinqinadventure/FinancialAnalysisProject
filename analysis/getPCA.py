@@ -1,6 +1,6 @@
 
 # 根据名称一个个获取对应参数
-def getFeatures(features):
+def getFeatures(features,stockdata):
     for feature in features:
         pass
 
