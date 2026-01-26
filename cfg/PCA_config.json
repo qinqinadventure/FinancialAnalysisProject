@@ -6,5 +6,9 @@
   "stock_code": {
     "values": "000001",
     "description": "待分析股票代码"
+  },
+  "pca_params": {
+    "values": ["",""],
+    "description": "待分析参数"
   }
 }

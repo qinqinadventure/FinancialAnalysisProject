@@ -41,11 +41,10 @@ if __name__ == "__main__":
 
     # 计算单个特征的相似度
     comp_score, detailed_scores = similarity_analyzer.comprehensive_similarity(0)
-    print(f"\n特征0的综合相似度: {comp_score:.4f}")
     print("详细得分:", {k: f"{v:.4f}" for k, v in detailed_scores.items()})
 
     # 对所有特征进行排序
     rankings = similarity_analyzer.rank_features()
     print(f"\n特征相似度排名:")
     for i, (feature_idx, score) in enumerate(rankings):
-        print(f"{i + 1}. 特征{feature_idx}: {score:.4f}")
+        print(f"{i + 1}. {feature_idx}: {score:.4f}")
