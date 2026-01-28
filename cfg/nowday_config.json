@@ -1,0 +1,18 @@
+{
+    "stock_code": {
+        "value": "601225",
+        "description": "待分析股票代码"
+    },
+    "history_days": {
+        "value": 2000,
+        "description": "历史分位判断"
+    },
+    "quantity_days": {
+        "value": 20,
+        "description": "量比分析天数"
+    },
+    "analysis_target": {
+        "value": ["成交量","涨跌幅/成交量"],
+        "description": "待分析指标"
+    }
+}
